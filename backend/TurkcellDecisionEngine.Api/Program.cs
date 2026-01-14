@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using TurkcellDecisionEngine.Api.Hubs;
+using TurkcellDecisionEngine.Api.Services;
 using TurkcellDecisionEngine.Core.Interfaces;
 using TurkcellDecisionEngine.Infrastructure.Data;
 using TurkcellDecisionEngine.Infrastructure.Services;
@@ -11,6 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Configure PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -39,6 +44,22 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
         ClockSkew = TimeSpan.Zero
     };
+
+    // Configure JWT for SignalR
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization(options =>
@@ -49,55 +70,54 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Register services
-builder.Services.AddScoped<IEventProcessor, EventProcessor>();
+builder.Services.AddScoped<INotificationService, BipNotificationService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<DbSeeder>();
+
+// Register SignalR notifier as singleton (uses IHubContext which is thread-safe)
+builder.Services.AddSingleton<IRealtimeNotifier, SignalRNotifier>();
+
+// Register other services that depend on IRealtimeNotifier
 builder.Services.AddScoped<IUserStateManager, UserStateManager>();
 builder.Services.AddScoped<IRuleEngine, RuleEngine>();
 builder.Services.AddScoped<IActionManager, ActionManager>();
-builder.Services.AddScoped<INotificationService, BipNotificationService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventProcessor, EventProcessor>();
 
-// Configure CORS for React frontend
+// Configure CORS for React frontend and SignalR (Local Network Support)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        policy.SetIsOriginAllowed(_ => true) // Allow any origin for local network access
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials(); // Required for SignalR
     });
 });
 
 var app = builder.Build();
 
-// Ensure database is created and load seed data from CSV
+// Database migration and seeding
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var dbContext = services.GetRequiredService<AppDbContext>();
-    var logger = services.GetRequiredService<ILogger<CsvSeedDataLoader>>();
+    var seeder = services.GetRequiredService<DbSeeder>();
+    var logger = services.GetRequiredService<ILogger<DbSeeder>>();
     
     // Check if we should reset the database (for development/demo)
     var resetDb = Environment.GetEnvironmentVariable("RESET_DATABASE") == "true";
-    if (resetDb && app.Environment.IsDevelopment())
+    if (resetDb)
     {
         logger.LogWarning("Resetting database as requested...");
-        dbContext.Database.EnsureDeleted();
+        await dbContext.Database.EnsureDeletedAsync();
     }
     
-    // Ensure database is created
-    dbContext.Database.EnsureCreated();
+    // Ensure database and schema are created
+    await dbContext.Database.EnsureCreatedAsync();
     
-    // Load seed data from CSV files
-    var seedDataPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "Seeddata");
-    if (Directory.Exists(seedDataPath))
-    {
-        var seedLoader = new CsvSeedDataLoader(dbContext, logger, seedDataPath);
-        await seedLoader.LoadAllSeedDataAsync();
-    }
-    else
-    {
-        logger.LogWarning("Seeddata folder not found at {Path}", seedDataPath);
-    }
+    // Seed the database
+    await seeder.SeedAsync();
 }
 
 // Configure the HTTP request pipeline.
@@ -112,5 +132,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hub
+app.MapHub<DecisionHub>("/hubs/decision");
 
 app.Run();

@@ -10,11 +10,16 @@ public class ActionManager : IActionManager
 {
     private readonly AppDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public ActionManager(AppDbContext context, INotificationService notificationService)
+    public ActionManager(
+        AppDbContext context, 
+        INotificationService notificationService,
+        IRealtimeNotifier realtimeNotifier)
     {
         _context = context;
         _notificationService = notificationService;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public Task<(string SelectedAction, List<string> SuppressedActions)> SelectActionAsync(IEnumerable<Rule> triggeredRules)
@@ -49,6 +54,9 @@ public class ActionManager : IActionManager
             Timestamp = DateTime.UtcNow
         };
 
+        // Load user for notification
+        decision.User = await _context.Users.FindAsync(userId);
+
         _context.Decisions.Add(decision);
 
         // Create action record
@@ -63,12 +71,17 @@ public class ActionManager : IActionManager
             };
             _context.Actions.Add(action);
 
-            // Send notification
+            // Send BiP notification
             var message = GetNotificationMessage(selectedAction);
             await _notificationService.SendNotificationAsync(userId, selectedAction, message);
         }
 
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyDecisionMadeAsync(decision, userId);
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
+
         return decision;
     }
 

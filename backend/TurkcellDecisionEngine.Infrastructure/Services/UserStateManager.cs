@@ -9,15 +9,19 @@ namespace TurkcellDecisionEngine.Infrastructure.Services;
 public class UserStateManager : IUserStateManager
 {
     private readonly AppDbContext _context;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public UserStateManager(AppDbContext context)
+    public UserStateManager(AppDbContext context, IRealtimeNotifier realtimeNotifier)
     {
         _context = context;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<UserState> GetOrCreateUserStateAsync(string userId)
     {
-        var userState = await _context.UserStates.FindAsync(userId);
+        var userState = await _context.UserStates
+            .Include(us => us.User)
+            .FirstOrDefaultAsync(us => us.UserId == userId);
         
         if (userState == null)
         {
@@ -90,6 +94,10 @@ public class UserStateManager : IUserStateManager
         userState.LastUpdated = DateTime.UtcNow;
         
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyUserStateChangedAsync(userState);
+
         return userState;
     }
 
@@ -104,7 +112,9 @@ public class UserStateManager : IUserStateManager
 
     public async Task ResetDailyStatesAsync()
     {
-        var states = await _context.UserStates.ToListAsync();
+        var states = await _context.UserStates
+            .Include(us => us.User)
+            .ToListAsync();
         
         foreach (var state in states)
         {
@@ -113,9 +123,13 @@ public class UserStateManager : IUserStateManager
             state.ContentMinutesToday = 0;
             state.RiskLevel = RiskLevel.LOW;
             state.LastUpdated = DateTime.UtcNow;
+
+            // Notify each user about their state reset
+            await _realtimeNotifier.NotifyUserStateChangedAsync(state);
         }
         
         await _context.SaveChangesAsync();
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
     }
 
     private RiskLevel CalculateRiskLevel(UserState state)

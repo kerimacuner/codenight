@@ -11,17 +11,20 @@ public class EventProcessor : IEventProcessor
     private readonly IUserStateManager _userStateManager;
     private readonly IRuleEngine _ruleEngine;
     private readonly IActionManager _actionManager;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
     public EventProcessor(
         AppDbContext context,
         IUserStateManager userStateManager,
         IRuleEngine ruleEngine,
-        IActionManager actionManager)
+        IActionManager actionManager,
+        IRealtimeNotifier realtimeNotifier)
     {
         _context = context;
         _userStateManager = userStateManager;
         _ruleEngine = ruleEngine;
         _actionManager = actionManager;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<Decision?> ProcessEventAsync(Event evt)
@@ -51,9 +54,16 @@ public class EventProcessor : IEventProcessor
             _context.Users.Add(user);
         }
 
+        // Set user reference for notification
+        evt.User = user;
+
         // Save the event
         _context.Events.Add(evt);
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyEventCreatedAsync(evt);
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
 
         // Update user state
         var userState = await _userStateManager.UpdateUserStateAsync(evt.UserId, evt);

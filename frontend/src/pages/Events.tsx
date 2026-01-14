@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Activity, Send, RefreshCw } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Activity, Send, RefreshCw, Wifi, WifiOff } from 'lucide-react';
 import { eventsApi } from '../services/api';
 import type { Event, CreateEventDto, ProcessEventResult } from '../types';
 import { ActionBadge } from '../components/ActionBadge';
+import { useRealtimeUpdates } from '../hooks/useSignalR';
 
 const services = ['Superonline', 'Paycell', 'TV+', 'Fizy', 'Game+'];
 const eventTypes = ['USAGE', 'PAYMENT', 'CONTENT_CONSUMPTION'];
@@ -28,11 +29,7 @@ export function Events() {
     unit: 'GB',
   });
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await eventsApi.getRecent(50);
@@ -42,7 +39,18 @@ export function Events() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  // Real-time updates via SignalR
+  const { isConnected } = useRealtimeUpdates({
+    onEventCreated: (event: Event) => {
+      setEvents((prev) => [event, ...prev.slice(0, 49)]);
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +58,7 @@ export function Events() {
     try {
       const result = await eventsApi.create(formData);
       setLastResult(result);
-      await loadEvents();
+      // Event will be added via SignalR, no need to reload
     } catch (err) {
       console.error('Failed to create event:', err);
     } finally {
@@ -86,10 +94,23 @@ export function Events() {
           <h1 className="text-3xl font-bold text-white mb-2">Event Yönetimi</h1>
           <p className="text-slate-400">Yeni event gönder ve event geçmişini izle</p>
         </div>
-        <button onClick={loadEvents} className="btn-secondary flex items-center gap-2">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Yenile
-        </button>
+        <div className="flex items-center gap-3">
+          {isConnected ? (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+              <Wifi className="w-4 h-4" />
+              <span className="text-sm font-medium">Canlı</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-400 bg-slate-500/10 px-3 py-1.5 rounded-full">
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">Bağlanıyor...</span>
+            </div>
+          )}
+          <button onClick={loadEvents} className="btn-secondary flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Yenile
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

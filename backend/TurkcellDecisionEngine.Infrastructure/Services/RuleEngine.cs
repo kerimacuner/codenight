@@ -10,15 +10,17 @@ namespace TurkcellDecisionEngine.Infrastructure.Services;
 public class RuleEngine : IRuleEngine
 {
     private readonly AppDbContext _context;
+    private readonly IRealtimeNotifier _realtimeNotifier;
     
     // Regex to match BETWEEN clauses: "field BETWEEN value1 AND value2"
     private static readonly Regex BetweenRegex = new(
         @"(\w+)\s+BETWEEN\s+(\d+(?:\.\d+)?)\s+AND\s+(\d+(?:\.\d+)?)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    public RuleEngine(AppDbContext context)
+    public RuleEngine(AppDbContext context, IRealtimeNotifier realtimeNotifier)
     {
         _context = context;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<IEnumerable<Rule>> EvaluateRulesAsync(UserState userState)
@@ -105,6 +107,11 @@ public class RuleEngine : IRuleEngine
 
         _context.Rules.Add(rule);
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyRuleChangedAsync(rule, "created");
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
+
         return rule;
     }
 
@@ -115,12 +122,19 @@ public class RuleEngine : IRuleEngine
         if (rule == null)
             return null;
 
+        var wasToggled = rule.IsActive != updatedRule.IsActive;
+
         rule.Condition = updatedRule.Condition;
         rule.Action = updatedRule.Action;
         rule.Priority = updatedRule.Priority;
         rule.IsActive = updatedRule.IsActive;
 
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyRuleChangedAsync(rule, wasToggled ? "toggled" : "updated");
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
+
         return rule;
     }
 
@@ -133,6 +147,11 @@ public class RuleEngine : IRuleEngine
 
         _context.Rules.Remove(rule);
         await _context.SaveChangesAsync();
+
+        // Notify via SignalR
+        await _realtimeNotifier.NotifyRuleChangedAsync(rule, "deleted");
+        await _realtimeNotifier.NotifyDashboardUpdateAsync();
+
         return true;
     }
 }

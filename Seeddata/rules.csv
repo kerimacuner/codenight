@@ -1,7 +1,0 @@
-rule_id,condition,action,priority
-R-01,internet_today_gb > 15,DATA_USAGE_WARNING,3
-R-02,spend_today_try > 300,SPEND_ALERT,2
-R-03,content_minutes_today > 240,CONTENT_COOLDOWN_SUGGESTION,4
-R-04,internet_today_gb > 15 && spend_today_try > 300,CRITICAL_ALERT,1
-R-05,internet_today_gb BETWEEN 10 AND 15,DATA_USAGE_NUDGE,6
-R-06,spend_today_try BETWEEN 200 AND 300,SPEND_NUDGE,5

@@ -15,3 +15,4 @@ C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\refi
 C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.pdb
 C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.genruntimeconfig.cache
 C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\ref\TurkcellDecisionEngine.Infrastructure.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.sourcelink.json

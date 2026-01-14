@@ -45,7 +45,7 @@ export function Layout({ children }: LayoutProps) {
       items.push({ path: '/admin', label: 'Admin Panel', icon: Shield });
     }
 
-    if (hasRole('Presenter')) {
+    if (hasRole(['Admin', 'Presenter'])) {
       items.push({ path: '/presenter', label: 'Sunum Modu', icon: Presentation });
     }
 

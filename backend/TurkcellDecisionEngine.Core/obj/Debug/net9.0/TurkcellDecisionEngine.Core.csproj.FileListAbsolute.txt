@@ -9,3 +9,4 @@ C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisi
 C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\refint\TurkcellDecisionEngine.Core.dll
 C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.pdb
 C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\ref\TurkcellDecisionEngine.Core.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.sourcelink.json

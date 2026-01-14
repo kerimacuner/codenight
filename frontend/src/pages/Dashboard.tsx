@@ -1,23 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Users, Activity, ClipboardList, BookOpen, TrendingUp, AlertTriangle } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Users, Activity, ClipboardList, BookOpen, TrendingUp, AlertTriangle, Wifi, WifiOff } from 'lucide-react';
 import { dashboardApi } from '../services/api';
-import type { DashboardSummary } from '../types';
+import type { DashboardSummary, Event, Decision } from '../types';
 import { StatCard } from '../components/StatCard';
 import { RiskBadge } from '../components/RiskBadge';
 import { ActionBadge } from '../components/ActionBadge';
+import { useRealtimeUpdates } from '../hooks/useSignalR';
 
 export function Dashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSummary();
-    const interval = setInterval(loadSummary, 10000); // Refresh every 10 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadSummary = async () => {
+  const loadSummary = useCallback(async () => {
     try {
       const data = await dashboardApi.getSummary();
       setSummary(data);
@@ -28,7 +23,41 @@ export function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  // Real-time updates via SignalR
+  const { isConnected } = useRealtimeUpdates({
+    onEventCreated: (event: Event) => {
+      setSummary((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          totalEventsToday: prev.totalEventsToday + 1,
+          recentEvents: [event, ...prev.recentEvents.slice(0, 9)],
+        };
+      });
+    },
+    onDecisionMade: (decision: Decision) => {
+      setSummary((prev) => {
+        if (!prev) return prev;
+        const newActionCounts = { ...prev.actionCountsToday };
+        newActionCounts[decision.selectedAction] = (newActionCounts[decision.selectedAction] || 0) + 1;
+        return {
+          ...prev,
+          totalDecisionsToday: prev.totalDecisionsToday + 1,
+          actionCountsToday: newActionCounts,
+          recentDecisions: [decision, ...prev.recentDecisions.slice(0, 9)],
+        };
+      });
+    },
+    onDashboardUpdate: () => {
+      loadSummary();
+    },
+  });
 
   if (loading) {
     return (
@@ -61,9 +90,24 @@ export function Dashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-        <p className="text-slate-400">Turkcell Decision Engine - Gerçek Zamanlı İzleme</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
+          <p className="text-slate-400">Turkcell Decision Engine - Gerçek Zamanlı İzleme</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+              <Wifi className="w-4 h-4" />
+              <span className="text-sm font-medium">Canlı</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-400 bg-slate-500/10 px-3 py-1.5 rounded-full">
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">Bağlanıyor...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats Grid */}

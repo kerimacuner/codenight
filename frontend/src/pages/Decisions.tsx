@@ -1,19 +1,16 @@
-import { useEffect, useState } from 'react';
-import { ClipboardList, RefreshCw, Filter } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { ClipboardList, RefreshCw, Filter, Wifi, WifiOff } from 'lucide-react';
 import { decisionsApi } from '../services/api';
 import type { Decision } from '../types';
 import { ActionBadge } from '../components/ActionBadge';
+import { useRealtimeUpdates } from '../hooks/useSignalR';
 
 export function Decisions() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterUser, setFilterUser] = useState<string>('');
 
-  useEffect(() => {
-    loadDecisions();
-  }, []);
-
-  const loadDecisions = async () => {
+  const loadDecisions = useCallback(async () => {
     try {
       setLoading(true);
       const data = await decisionsApi.getAll(100);
@@ -23,7 +20,18 @@ export function Decisions() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDecisions();
+  }, [loadDecisions]);
+
+  // Real-time updates via SignalR
+  const { isConnected } = useRealtimeUpdates({
+    onDecisionMade: (decision: Decision) => {
+      setDecisions((prev) => [decision, ...prev.slice(0, 99)]);
+    },
+  });
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('tr-TR', {
@@ -48,10 +56,23 @@ export function Decisions() {
           <h1 className="text-3xl font-bold text-white mb-2">Karar Logları</h1>
           <p className="text-slate-400">Sistem tarafından alınan kararları ve tetiklenen kuralları izle</p>
         </div>
-        <button onClick={loadDecisions} className="btn-secondary flex items-center gap-2">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Yenile
-        </button>
+        <div className="flex items-center gap-3">
+          {isConnected ? (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+              <Wifi className="w-4 h-4" />
+              <span className="text-sm font-medium">Canlı</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-400 bg-slate-500/10 px-3 py-1.5 rounded-full">
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">Bağlanıyor...</span>
+            </div>
+          )}
+          <button onClick={loadDecisions} className="btn-secondary flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Yenile
+          </button>
+        </div>
       </div>
 
       {/* Filter */}

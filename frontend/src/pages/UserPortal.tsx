@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
-import { Wifi, CreditCard, Tv, AlertTriangle, Bell, Activity } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Wifi, CreditCard, Tv, AlertTriangle, Bell, Activity, WifiIcon, WifiOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { usersApi, eventsApi, decisionsApi } from '../services/api';
 import type { UserState, Event, Decision } from '../types';
 import { RiskBadge } from '../components/RiskBadge';
 import { ActionBadge } from '../components/ActionBadge';
+import { useUserRealtimeUpdates } from '../hooks/useSignalR';
+import { NotificationToast } from '../components/NotificationToast';
 
 export function UserPortal() {
   const { user } = useAuth();
@@ -12,14 +14,9 @@ export function UserPortal() {
   const [events, setEvents] = useState<Event[]>([]);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState<{ action: string; show: boolean }>({ action: '', show: false });
 
-  useEffect(() => {
-    if (user?.userId) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.userId) return;
     
     try {
@@ -37,7 +34,28 @@ export function UserPortal() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.userId]);
+
+  useEffect(() => {
+    if (user?.userId) {
+      loadData();
+    }
+  }, [user?.userId, loadData]);
+
+  // Real-time updates via SignalR for this user only
+  const { isConnected } = useUserRealtimeUpdates(user?.userId, {
+    onStateChanged: (state: UserState) => {
+      setUserState(state);
+    },
+    onDecisionMade: (decision: Decision) => {
+      setDecisions((prev) => [decision, ...prev.slice(0, 9)]);
+      // Show notification toast
+      setNotification({ action: decision.selectedAction, show: true });
+    },
+    onEventCreated: (event: Event) => {
+      setEvents((prev) => [event, ...prev.slice(0, 9)]);
+    },
+  });
 
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleString('tr-TR', {
@@ -67,10 +85,32 @@ export function UserPortal() {
 
   return (
     <div className="space-y-8">
+      {/* Notification Toast */}
+      <NotificationToast
+        action={notification.action}
+        show={notification.show}
+        onClose={() => setNotification({ ...notification, show: false })}
+      />
+
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white mb-2">Hoş Geldiniz, {user?.name}</h1>
-        <p className="text-slate-400">Günlük kullanım durumunuz ve bildirimleriniz</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Hoş Geldiniz, {user?.name}</h1>
+          <p className="text-slate-400">Günlük kullanım durumunuz ve bildirimleriniz</p>
+        </div>
+        <div>
+          {isConnected ? (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+              <WifiIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">Canlı</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-400 bg-slate-500/10 px-3 py-1.5 rounded-full">
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">Bağlanıyor...</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Current Status */}
@@ -84,7 +124,7 @@ export function UserPortal() {
           <p className="text-slate-400 text-sm">Bugünkü İnternet</p>
           <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-blue-400 rounded-full transition-all"
+              className="h-full bg-blue-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.min((userState?.internetTodayGb || 0) / 20 * 100, 100)}%` }}
             />
           </div>
@@ -99,7 +139,7 @@ export function UserPortal() {
           <p className="text-slate-400 text-sm">Bugünkü Harcama</p>
           <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-green-400 rounded-full transition-all"
+              className="h-full bg-green-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.min((userState?.spendTodayTry || 0) / 500 * 100, 100)}%` }}
             />
           </div>
@@ -114,7 +154,7 @@ export function UserPortal() {
           <p className="text-slate-400 text-sm">İçerik Tüketimi</p>
           <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-purple-400 rounded-full transition-all"
+              className="h-full bg-purple-400 rounded-full transition-all duration-500"
               style={{ width: `${Math.min((userState?.contentMinutesToday || 0) / 300 * 100, 100)}%` }}
             />
           </div>
@@ -132,7 +172,7 @@ export function UserPortal() {
           </div>
           <p className="text-slate-400 text-sm">Risk Seviyesi</p>
           <div className="mt-2">
-            <RiskBadge risk={userState?.riskLevel || 'LOW'} />
+            <RiskBadge level={userState?.riskLevel || 'LOW'} />
           </div>
         </div>
       </div>

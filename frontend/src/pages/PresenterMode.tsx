@@ -9,12 +9,15 @@ import {
   AlertTriangle,
   Maximize,
   Minimize,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { eventsApi, usersApi, dashboardApi } from '../services/api';
-import type { DashboardSummary, CreateEventDto, UserState } from '../types';
+import type { DashboardSummary, CreateEventDto, UserState, Event, Decision } from '../types';
 import { RiskBadge } from '../components/RiskBadge';
 import { ActionBadge } from '../components/ActionBadge';
+import { useRealtimeUpdates } from '../hooks/useSignalR';
 
 interface Scenario {
   id: string;
@@ -73,12 +76,12 @@ export function PresenterMode() {
   const [userStates, setUserStates] = useState<UserState[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
   const [runningScenario, setRunningScenario] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string>('');
 
   const loadData = useCallback(async () => {
     try {
+      setLoading(true);
       const [summaryData, usersData] = await Promise.all([
         dashboardApi.getSummary(),
         usersApi.getAll(),
@@ -87,6 +90,8 @@ export function PresenterMode() {
       setUserStates(usersData);
     } catch (err) {
       console.error('Failed to load data:', err);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -94,12 +99,41 @@ export function PresenterMode() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(loadData, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, loadData]);
+  // Real-time updates via SignalR
+  const { isConnected } = useRealtimeUpdates({
+    onEventCreated: (event: Event) => {
+      setSummary((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          totalEventsToday: prev.totalEventsToday + 1,
+          recentEvents: [event, ...prev.recentEvents.slice(0, 9)],
+        };
+      });
+    },
+    onDecisionMade: (decision: Decision) => {
+      setLastAction(decision.selectedAction);
+      setSummary((prev) => {
+        if (!prev) return prev;
+        const newActionCounts = { ...prev.actionCountsToday };
+        newActionCounts[decision.selectedAction] = (newActionCounts[decision.selectedAction] || 0) + 1;
+        return {
+          ...prev,
+          totalDecisionsToday: prev.totalDecisionsToday + 1,
+          actionCountsToday: newActionCounts,
+          recentDecisions: [decision, ...prev.recentDecisions.slice(0, 9)],
+        };
+      });
+    },
+    onUserStateChanged: (state: UserState) => {
+      setUserStates((prev) => 
+        prev.map((s) => (s.userId === state.userId ? { ...s, ...state } : s))
+      );
+    },
+    onDashboardUpdate: () => {
+      loadData();
+    },
+  });
 
   const runScenario = async (scenario: Scenario) => {
     setRunningScenario(scenario.id);
@@ -119,8 +153,7 @@ export function PresenterMode() {
         
         await new Promise(resolve => setTimeout(resolve, 500));
       }
-      
-      await loadData();
+      // Data will be updated via SignalR, no need to reload
     } catch (err) {
       console.error('Scenario failed:', err);
     } finally {
@@ -134,7 +167,7 @@ export function PresenterMode() {
     try {
       await usersApi.resetDaily();
       setLastAction('Günlük veriler sıfırlandı');
-      await loadData();
+      // Data will be updated via SignalR
     } catch (err) {
       console.error('Reset failed:', err);
     } finally {
@@ -181,13 +214,17 @@ export function PresenterMode() {
           <p className="text-slate-400">Demo kontrol paneli ve canlı dashboard</p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => setAutoRefresh(!autoRefresh)}
-            className={`btn-secondary flex items-center gap-2 ${autoRefresh ? 'bg-turkcell-yellow text-slate-900' : ''}`}
-          >
-            <RefreshCw className={`w-4 h-4 ${autoRefresh ? 'animate-spin' : ''}`} />
-            {autoRefresh ? 'Durdur' : 'Otomatik Yenile'}
-          </button>
+          {isConnected ? (
+            <div className="flex items-center gap-2 text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full">
+              <Wifi className="w-4 h-4" />
+              <span className="text-sm font-medium">Canlı</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-slate-400 bg-slate-500/10 px-3 py-1.5 rounded-full">
+              <WifiOff className="w-4 h-4" />
+              <span className="text-sm font-medium">Bağlanıyor...</span>
+            </div>
+          )}
           <button onClick={toggleFullscreen} className="btn-secondary flex items-center gap-2">
             {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
             {isFullscreen ? 'Çıkış' : 'Tam Ekran'}
@@ -197,7 +234,7 @@ export function PresenterMode() {
 
       {/* Last Action Banner */}
       {lastAction && (
-        <div className="p-4 bg-turkcell-yellow/20 border border-turkcell-yellow/30 rounded-lg flex items-center justify-between">
+        <div className="p-4 bg-turkcell-yellow/20 border border-turkcell-yellow/30 rounded-lg flex items-center justify-between animate-pulse">
           <div className="flex items-center gap-3">
             <Zap className="w-5 h-5 text-turkcell-yellow" />
             <span className="text-white">Son Aksiyon:</span>
@@ -304,11 +341,11 @@ export function PresenterMode() {
           {userStates.map((state) => (
             <div
               key={state.userId}
-              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50"
+              className="p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 transition-all hover:border-slate-600/50"
             >
               <div className="flex items-center justify-between mb-3">
                 <span className="font-mono text-turkcell-yellow">{state.userId}</span>
-                <RiskBadge risk={state.riskLevel} />
+                <RiskBadge level={state.riskLevel} />
               </div>
               <p className="text-sm text-white mb-2">{state.userName}</p>
               <div className="space-y-1 text-xs text-slate-400">

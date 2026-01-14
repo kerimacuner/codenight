@@ -141,3 +141,4 @@ C:\dev\Case1\backend\TurkcellDecisionEngine.Api\bin\Debug\net9.0\Microsoft.Ident
 C:\dev\Case1\backend\TurkcellDecisionEngine.Api\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\dev\Case1\backend\TurkcellDecisionEngine.Api\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
 C:\dev\Case1\backend\TurkcellDecisionEngine.Api\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Api\obj\Debug\net9.0\TurkcellDecisionEngine.Api.sourcelink.json
