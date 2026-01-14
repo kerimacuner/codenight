@@ -1,0 +1,17 @@
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.deps.json
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.runtimeconfig.json
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.pdb
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Core.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\bin\Debug\net9.0\TurkcellDecisionEngine.Core.pdb
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.csproj.AssemblyReference.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.AssemblyInfoInputs.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.AssemblyInfo.cs
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.csproj.CoreCompileInputs.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\Turkcell.F021FDC8.Up2Date
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\refint\TurkcellDecisionEngine.Infrastructure.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.pdb
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\TurkcellDecisionEngine.Infrastructure.genruntimeconfig.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Infrastructure\obj\Debug\net9.0\ref\TurkcellDecisionEngine.Infrastructure.dll

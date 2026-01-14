@@ -1,0 +1,6 @@
+@TurkcellDecisionEngine.Api_HostAddress = http://localhost:5152
+
+GET {{TurkcellDecisionEngine.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

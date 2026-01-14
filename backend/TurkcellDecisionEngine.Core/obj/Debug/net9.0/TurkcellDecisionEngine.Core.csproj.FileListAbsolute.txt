@@ -1,0 +1,11 @@
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\bin\Debug\net9.0\TurkcellDecisionEngine.Core.deps.json
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\bin\Debug\net9.0\TurkcellDecisionEngine.Core.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\bin\Debug\net9.0\TurkcellDecisionEngine.Core.pdb
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.AssemblyInfoInputs.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.AssemblyInfo.cs
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.csproj.CoreCompileInputs.cache
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\refint\TurkcellDecisionEngine.Core.dll
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\TurkcellDecisionEngine.Core.pdb
+C:\dev\Case1\backend\TurkcellDecisionEngine.Core\obj\Debug\net9.0\ref\TurkcellDecisionEngine.Core.dll

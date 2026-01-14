@@ -1,0 +1,13 @@
+user_id,name,city,email,password,role
+admin,Admin Kullanıcı,Istanbul,admin@turkcell.com,admin123,Admin
+presenter,Sunum Yöneticisi,Istanbul,presenter@turkcell.com,presenter123,Presenter
+U1,Ayşe Yılmaz,Istanbul,ayse@example.com,123456,User
+U2,Ali Kaya,Ankara,ali@example.com,123456,User
+U3,Deniz Demir,Izmir,deniz@example.com,123456,User
+U4,Mert Çelik,Bursa,mert@example.com,123456,User
+U5,Ece Öztürk,Antalya,ece@example.com,123456,User
+U6,Burak Şahin,Istanbul,burak@example.com,123456,User
+U7,Zeynep Aydın,Ankara,zeynep@example.com,123456,User
+U8,Emre Koç,Izmir,emre@example.com,123456,User
+U9,Selin Arslan,Bursa,selin@example.com,123456,User
+U10,Can Yıldız,Antalya,can@example.com,123456,User
