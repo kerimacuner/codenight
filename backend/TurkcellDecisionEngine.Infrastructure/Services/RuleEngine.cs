@@ -126,6 +126,7 @@ public class RuleEngine : IRuleEngine
 
         rule.Condition = updatedRule.Condition;
         rule.Action = updatedRule.Action;
+        rule.Message = updatedRule.Message;
         rule.Priority = updatedRule.Priority;
         rule.IsActive = updatedRule.IsActive;
 

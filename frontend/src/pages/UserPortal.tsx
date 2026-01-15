@@ -75,6 +75,15 @@ export function UserPortal() {
     }
   };
 
+  // Decision'dan gelen mesajı kullan, yoksa varsayılan mesaj göster
+  const getDecisionMessage = (decision: Decision): string => {
+    if (decision.message && decision.message.trim() !== '') {
+      return decision.message;
+    }
+    // Fallback: Kural yönetiminde mesaj tanımlanmamışsa varsayılan mesaj
+    return 'Hesabınızla ilgili bir güncelleme var.';
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -193,8 +202,8 @@ export function UserPortal() {
                     <ActionBadge action={decision.selectedAction} />
                     <span className="text-xs text-slate-500">{formatTime(decision.timestamp)}</span>
                   </div>
-                  <p className="text-sm text-slate-400">
-                    Kurallar tetiklendi: {decision.triggeredRules.join(', ')}
+                  <p className="text-sm text-slate-300">
+                    {getDecisionMessage(decision)}
                   </p>
                 </div>
               ))}

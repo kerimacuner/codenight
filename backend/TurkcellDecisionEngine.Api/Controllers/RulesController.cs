@@ -28,6 +28,7 @@ public class RulesController : ControllerBase
             RuleId = r.RuleId,
             Condition = r.Condition,
             Action = r.Action,
+            Message = r.Message,
             Priority = r.Priority,
             IsActive = r.IsActive
         });
@@ -50,6 +51,7 @@ public class RulesController : ControllerBase
             RuleId = rule.RuleId,
             Condition = rule.Condition,
             Action = rule.Action,
+            Message = rule.Message,
             Priority = rule.Priority,
             IsActive = rule.IsActive
         });
@@ -63,6 +65,7 @@ public class RulesController : ControllerBase
             RuleId = dto.RuleId ?? string.Empty,
             Condition = dto.Condition,
             Action = dto.Action,
+            Message = dto.Message,
             Priority = dto.Priority,
             IsActive = dto.IsActive
         };
@@ -74,6 +77,7 @@ public class RulesController : ControllerBase
             RuleId = created.RuleId,
             Condition = created.Condition,
             Action = created.Action,
+            Message = created.Message,
             Priority = created.Priority,
             IsActive = created.IsActive
         });
@@ -87,6 +91,7 @@ public class RulesController : ControllerBase
             RuleId = ruleId,
             Condition = dto.Condition,
             Action = dto.Action,
+            Message = dto.Message,
             Priority = dto.Priority,
             IsActive = dto.IsActive
         };
@@ -103,6 +108,7 @@ public class RulesController : ControllerBase
             RuleId = updated.RuleId,
             Condition = updated.Condition,
             Action = updated.Action,
+            Message = updated.Message,
             Priority = updated.Priority,
             IsActive = updated.IsActive
         });
@@ -136,6 +142,7 @@ public class RulesController : ControllerBase
             RuleId = ruleId,
             Condition = rule.Condition,
             Action = rule.Action,
+            Message = rule.Message,
             Priority = rule.Priority,
             IsActive = !rule.IsActive
         };
@@ -147,6 +154,7 @@ public class RulesController : ControllerBase
             RuleId = updated!.RuleId,
             Condition = updated.Condition,
             Action = updated.Action,
+            Message = updated.Message,
             Priority = updated.Priority,
             IsActive = updated.IsActive
         });

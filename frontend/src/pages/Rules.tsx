@@ -4,12 +4,13 @@ import { rulesApi } from '../services/api';
 import type { Rule, CreateRuleDto } from '../types';
 import { ActionBadge } from '../components/ActionBadge';
 
-const actionTypes = ['DATA_USAGE_WARNING', 'SPEND_ALERT', 'CONTENT_SUGGESTION', 'CRITICAL_ALERT'];
+const actionTypes = ['DATA_USAGE_WARNING', 'SPEND_ALERT', 'CONTENT_SUGGESTION', 'CRITICAL_ALERT', 'DATA_USAGE_NUDGE', 'SPEND_NUDGE', 'CONTENT_COOLDOWN_SUGGESTION'];
 
 interface RuleFormData {
   ruleId?: string;
   condition: string;
   action: string;
+  message: string;
   priority: number;
   isActive: boolean;
 }
@@ -17,6 +18,7 @@ interface RuleFormData {
 const initialFormData: RuleFormData = {
   condition: '',
   action: 'DATA_USAGE_WARNING',
+  message: '',
   priority: 1,
   isActive: true,
 };
@@ -57,6 +59,7 @@ export function Rules() {
       ruleId: rule.ruleId,
       condition: rule.condition,
       action: rule.action,
+      message: rule.message || '',
       priority: rule.priority,
       isActive: rule.isActive,
     });
@@ -145,6 +148,7 @@ export function Rules() {
                   <th className="pb-3 pr-4">Kural ID</th>
                   <th className="pb-3 pr-4">Koşul</th>
                   <th className="pb-3 pr-4">Aksiyon</th>
+                  <th className="pb-3 pr-4">Kullanıcı Mesajı</th>
                   <th className="pb-3 pr-4">Öncelik</th>
                   <th className="pb-3 pr-4">Durum</th>
                   <th className="pb-3 text-right">İşlemler</th>
@@ -163,6 +167,11 @@ export function Rules() {
                     </td>
                     <td className="py-4 pr-4">
                       <ActionBadge action={rule.action} />
+                    </td>
+                    <td className="py-4 pr-4 max-w-xs">
+                      <p className="text-slate-300 text-xs truncate" title={rule.message || 'Mesaj tanımlanmamış'}>
+                        {rule.message || <span className="text-slate-500 italic">Mesaj yok</span>}
+                      </p>
                     </td>
                     <td className="py-4 pr-4">
                       <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
@@ -293,6 +302,18 @@ export function Rules() {
               </div>
 
               <div>
+                <label className="block text-sm text-slate-400 mb-1">Kullanıcı Mesajı *</label>
+                <textarea
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  placeholder="Bu kural tetiklendiğinde kullanıcıya gösterilecek mesaj"
+                  rows={3}
+                  className="input w-full resize-none"
+                />
+                <p className="text-xs text-slate-500 mt-1">Bu mesaj kullanıcı portalında gösterilecektir.</p>
+              </div>
+
+              <div>
                 <label className="block text-sm text-slate-400 mb-1">Öncelik (1 = en yüksek)</label>
                 <input
                   type="number"
@@ -322,7 +343,7 @@ export function Rules() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || !formData.condition}
+                disabled={saving || !formData.condition || !formData.message}
                 className="btn-primary flex items-center gap-2"
               >
                 {saving ? (

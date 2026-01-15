@@ -32,6 +32,7 @@ export interface Rule {
   ruleId: string;
   condition: string;
   action: string;
+  message: string; // Kullanıcıya gösterilecek mesaj
   priority: number;
   isActive: boolean;
 }
@@ -43,6 +44,7 @@ export interface Decision {
   triggeredRules: string[];
   selectedAction: string;
   suppressedActions: string[];
+  message: string; // Kullanıcıya gösterilecek mesaj
   timestamp: string;
 }
 
@@ -71,6 +73,7 @@ export interface CreateRuleDto {
   ruleId?: string;
   condition: string;
   action: string;
+  message: string;
   priority: number;
   isActive: boolean;
 }

@@ -32,6 +32,7 @@ public class DecisionsController : ControllerBase
             TriggeredRules = JsonSerializer.Deserialize<List<string>>(d.TriggeredRules) ?? new(),
             SelectedAction = d.SelectedAction,
             SuppressedActions = JsonSerializer.Deserialize<List<string>>(d.SuppressedActions) ?? new(),
+            Message = d.Message,
             Timestamp = d.Timestamp
         });
 
@@ -60,6 +61,7 @@ public class DecisionsController : ControllerBase
             TriggeredRules = JsonSerializer.Deserialize<List<string>>(d.TriggeredRules) ?? new(),
             SelectedAction = d.SelectedAction,
             SuppressedActions = JsonSerializer.Deserialize<List<string>>(d.SuppressedActions) ?? new(),
+            Message = d.Message,
             Timestamp = d.Timestamp
         });
 
@@ -85,6 +87,7 @@ public class DecisionsController : ControllerBase
             TriggeredRules = JsonSerializer.Deserialize<List<string>>(d.TriggeredRules) ?? new(),
             SelectedAction = d.SelectedAction,
             SuppressedActions = JsonSerializer.Deserialize<List<string>>(d.SuppressedActions) ?? new(),
+            Message = d.Message,
             Timestamp = d.Timestamp
         });
 

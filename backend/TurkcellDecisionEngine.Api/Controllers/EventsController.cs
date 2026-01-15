@@ -71,6 +71,7 @@ public class EventsController : ControllerBase
                 TriggeredRules = JsonSerializer.Deserialize<List<string>>(decision.TriggeredRules) ?? new(),
                 SelectedAction = decision.SelectedAction,
                 SuppressedActions = JsonSerializer.Deserialize<List<string>>(decision.SuppressedActions) ?? new(),
+                Message = decision.Message,
                 Timestamp = decision.Timestamp
             };
         }

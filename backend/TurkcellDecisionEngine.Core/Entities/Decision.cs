@@ -7,6 +7,7 @@ public class Decision
     public string TriggeredRules { get; set; } = "[]"; // JSON array
     public string SelectedAction { get; set; } = string.Empty;
     public string SuppressedActions { get; set; } = "[]"; // JSON array
+    public string Message { get; set; } = string.Empty; // Kullanıcıya gösterilecek mesaj
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     
     // Navigation property

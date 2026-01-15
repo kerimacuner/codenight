@@ -42,7 +42,12 @@ public class ActionManager : IActionManager
 
     public async Task<Decision> CreateDecisionAsync(string userId, IEnumerable<Rule> triggeredRules, string selectedAction, List<string> suppressedActions)
     {
-        var triggeredRuleIds = triggeredRules.Select(r => r.RuleId).ToList();
+        var rulesList = triggeredRules.OrderBy(r => r.Priority).ToList();
+        var triggeredRuleIds = rulesList.Select(r => r.RuleId).ToList();
+
+        // En yüksek öncelikli kuralın mesajını al
+        var selectedRule = rulesList.FirstOrDefault();
+        var message = selectedRule?.Message ?? GetNotificationMessage(selectedAction);
 
         var decision = new Decision
         {
@@ -51,6 +56,7 @@ public class ActionManager : IActionManager
             TriggeredRules = JsonSerializer.Serialize(triggeredRuleIds),
             SelectedAction = selectedAction,
             SuppressedActions = JsonSerializer.Serialize(suppressedActions),
+            Message = message,
             Timestamp = DateTime.UtcNow
         };
 
@@ -72,7 +78,6 @@ public class ActionManager : IActionManager
             _context.Actions.Add(action);
 
             // Send BiP notification
-            var message = GetNotificationMessage(selectedAction);
             await _notificationService.SendNotificationAsync(userId, selectedAction, message);
         }
 

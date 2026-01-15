@@ -118,12 +118,12 @@ public class DbSeeder
 
         var rules = new List<Rule>
         {
-            new Rule { RuleId = "R-01", Condition = "internet_today_gb > 15", Action = "DATA_USAGE_WARNING", Priority = 3, IsActive = true },
-            new Rule { RuleId = "R-02", Condition = "spend_today_try > 300", Action = "SPEND_ALERT", Priority = 2, IsActive = true },
-            new Rule { RuleId = "R-03", Condition = "content_minutes_today > 180", Action = "CONTENT_SUGGESTION", Priority = 4, IsActive = true },
-            new Rule { RuleId = "R-04", Condition = "internet_today_gb > 15 && spend_today_try > 300", Action = "CRITICAL_ALERT", Priority = 1, IsActive = true },
-            new Rule { RuleId = "R-05", Condition = "internet_today_gb BETWEEN 10 AND 15", Action = "DATA_USAGE_NUDGE", Priority = 5, IsActive = true },
-            new Rule { RuleId = "R-06", Condition = "spend_today_try BETWEEN 200 AND 300", Action = "SPEND_NUDGE", Priority = 5, IsActive = true },
+            new Rule { RuleId = "R-01", Condition = "internet_today_gb > 15", Action = "DATA_USAGE_WARNING", Message = "Günlük internet kullanımınız yüksek seviyeye ulaştı. Kotanızı kontrol etmenizi öneririz.", Priority = 3, IsActive = true },
+            new Rule { RuleId = "R-02", Condition = "spend_today_try > 300", Action = "SPEND_ALERT", Message = "Günlük harcama limitinize yaklaşıyorsunuz. Harcamalarınızı gözden geçirin.", Priority = 2, IsActive = true },
+            new Rule { RuleId = "R-03", Condition = "content_minutes_today > 180", Action = "CONTENT_SUGGESTION", Message = "Bugün çok fazla içerik tükettiniz. Bir mola vermeyi düşünebilirsiniz.", Priority = 4, IsActive = true },
+            new Rule { RuleId = "R-04", Condition = "internet_today_gb > 15 && spend_today_try > 300", Action = "CRITICAL_ALERT", Message = "⚠️ Dikkat! İnternet kotası ve harcama limitinizi aştınız. Acil müdahale gerekebilir.", Priority = 1, IsActive = true },
+            new Rule { RuleId = "R-05", Condition = "internet_today_gb BETWEEN 10 AND 15", Action = "DATA_USAGE_NUDGE", Message = "İnternet kullanımınız artıyor. Kota durumunuzu takip edin.", Priority = 5, IsActive = true },
+            new Rule { RuleId = "R-06", Condition = "spend_today_try BETWEEN 200 AND 300", Action = "SPEND_NUDGE", Message = "Harcamalarınız artmaya başladı. Bütçenizi gözden geçirin.", Priority = 5, IsActive = true },
         };
 
         await _context.Rules.AddRangeAsync(rules);
