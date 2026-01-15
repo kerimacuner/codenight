@@ -13,7 +13,8 @@ import type {
   AuthUser,
   User,
   CreateUserDto,
-  UpdateUserDto
+  UpdateUserDto,
+  SimulationConfig
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
@@ -177,6 +178,14 @@ export const decisionsApi = {
 export const dashboardApi = {
   getSummary: async (): Promise<DashboardSummary> => {
     const response = await api.get<DashboardSummary>('/dashboard/summary');
+    return response.data;
+  },
+};
+
+// Simulation API
+export const simulationApi = {
+  getConfig: async (): Promise<SimulationConfig> => {
+    const response = await api.get<SimulationConfig>('/simulation/config');
     return response.data;
   },
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { 
   Presentation, 
   Play, 
@@ -11,10 +11,13 @@ import {
   Minimize,
   RefreshCw,
   Wifi,
-  WifiOff
+  WifiOff,
+  Radio,
+  Square,
+  Gauge
 } from 'lucide-react';
-import { eventsApi, usersApi, dashboardApi } from '../services/api';
-import type { DashboardSummary, CreateEventDto, UserState, Event, Decision } from '../types';
+import { eventsApi, usersApi, dashboardApi, simulationApi } from '../services/api';
+import type { DashboardSummary, CreateEventDto, UserState, Event, Decision, SimulationConfig } from '../types';
 import { RiskBadge } from '../components/RiskBadge';
 import { ActionBadge } from '../components/ActionBadge';
 import { useRealtimeUpdates } from '../hooks/useSignalR';
@@ -78,6 +81,13 @@ export function PresenterMode() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [runningScenario, setRunningScenario] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string>('');
+  
+  // Simulation states
+  const [simulationConfig, setSimulationConfig] = useState<SimulationConfig | null>(null);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationSpeed, setSimulationSpeed] = useState(3);
+  const [eventCount, setEventCount] = useState(0);
+  const simulationRef = useRef<number | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -95,9 +105,106 @@ export function PresenterMode() {
     }
   }, []);
 
+  // Load simulation config
+  const loadSimulationConfig = useCallback(async () => {
+    try {
+      const config = await simulationApi.getConfig();
+      setSimulationConfig(config);
+      setSimulationSpeed(config.defaultIntervalSeconds);
+    } catch (err) {
+      console.error('Failed to load simulation config:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadSimulationConfig();
+  }, [loadData, loadSimulationConfig]);
+
+  // Generate random event based on config
+  const generateRandomEvent = useCallback(async () => {
+    if (!simulationConfig || userStates.length === 0) return;
+    
+    // Filter out admin/presenter users
+    const regularUsers = userStates.filter(u => !['admin', 'presenter'].includes(u.userId));
+    if (regularUsers.length === 0) return;
+    
+    // Random user
+    const user = regularUsers[Math.floor(Math.random() * regularUsers.length)];
+    
+    // Random service from config
+    const service = simulationConfig.services[
+      Math.floor(Math.random() * simulationConfig.services.length)
+    ];
+    
+    // Mixed intensity: aggressive or normal based on probability
+    const isAggressive = Math.random() < simulationConfig.aggressiveProbability;
+    const min = isAggressive ? service.aggressiveMin : service.normalMin;
+    const max = isAggressive ? service.aggressiveMax : service.normalMax;
+    const value = min + Math.random() * (max - min);
+    
+    try {
+      const result = await eventsApi.create({
+        userId: user.userId,
+        service: service.name,
+        eventType: service.eventType,
+        value: Math.round(value * 10) / 10,
+        unit: service.unit,
+      });
+      
+      setEventCount(prev => prev + 1);
+      
+      if (result.decision) {
+        setLastAction(result.decision.selectedAction);
+      }
+    } catch (err) {
+      console.error('Failed to generate event:', err);
+    }
+  }, [simulationConfig, userStates]);
+
+  // Start simulation
+  const startSimulation = useCallback(() => {
+    if (simulationRef.current) return;
+    
+    setIsSimulating(true);
+    setEventCount(0);
+    
+    // Generate first event immediately
+    generateRandomEvent();
+    
+    // Set up interval
+    simulationRef.current = window.setInterval(() => {
+      generateRandomEvent();
+    }, simulationSpeed * 1000);
+  }, [generateRandomEvent, simulationSpeed]);
+
+  // Stop simulation
+  const stopSimulation = useCallback(() => {
+    if (simulationRef.current) {
+      clearInterval(simulationRef.current);
+      simulationRef.current = null;
+    }
+    setIsSimulating(false);
+  }, []);
+
+  // Update interval when speed changes during simulation
+  useEffect(() => {
+    if (isSimulating && simulationRef.current) {
+      clearInterval(simulationRef.current);
+      simulationRef.current = window.setInterval(() => {
+        generateRandomEvent();
+      }, simulationSpeed * 1000);
+    }
+  }, [simulationSpeed, isSimulating, generateRandomEvent]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (simulationRef.current) {
+        clearInterval(simulationRef.current);
+      }
+    };
+  }, []);
 
   // Real-time updates via SignalR
   const { isConnected } = useRealtimeUpdates({
@@ -289,6 +396,94 @@ export function PresenterMode() {
             Yenile
           </button>
         </div>
+      </div>
+
+      {/* Auto Simulation Panel */}
+      <div className="card">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Radio className={`w-5 h-5 ${isSimulating ? 'text-red-400 animate-pulse' : 'text-turkcell-yellow'}`} />
+          Otomatik Simülasyon
+          {isSimulating && (
+            <span className="ml-2 px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full animate-pulse">
+              CANLI
+            </span>
+          )}
+        </h3>
+        
+        {simulationConfig ? (
+          <div className="space-y-4">
+            {/* Speed Slider */}
+            <div className="flex items-center gap-4">
+              <Gauge className="w-5 h-5 text-slate-400" />
+              <div className="flex-1">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm text-slate-400">Event Aralığı</span>
+                  <span className="text-sm text-turkcell-yellow font-mono">{simulationSpeed} saniye</span>
+                </div>
+                <input
+                  type="range"
+                  min={simulationConfig.minIntervalSeconds}
+                  max={simulationConfig.maxIntervalSeconds}
+                  value={simulationSpeed}
+                  onChange={(e) => setSimulationSpeed(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-turkcell-yellow"
+                />
+                <div className="flex justify-between mt-1 text-xs text-slate-500">
+                  <span>{simulationConfig.minIntervalSeconds}s (Hızlı)</span>
+                  <span>{simulationConfig.maxIntervalSeconds}s (Yavaş)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Simulation Info */}
+            <div className="flex items-center gap-6 text-sm text-slate-400">
+              <div>
+                <span className="text-slate-500">Servisler:</span>{' '}
+                <span className="text-white">{simulationConfig.services.map(s => s.name).join(', ')}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">Agresif Olasılık:</span>{' '}
+                <span className="text-orange-400">{(simulationConfig.aggressiveProbability * 100).toFixed(0)}%</span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-4">
+              {!isSimulating ? (
+                <button
+                  onClick={startSimulation}
+                  disabled={loading || runningScenario !== null}
+                  className="btn-primary flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <Play className="w-4 h-4" />
+                  Simülasyonu Başlat
+                </button>
+              ) : (
+                <button
+                  onClick={stopSimulation}
+                  className="btn-primary flex items-center gap-2 bg-red-600 hover:bg-red-700"
+                >
+                  <Square className="w-4 h-4" />
+                  Simülasyonu Durdur
+                </button>
+              )}
+              
+              {isSimulating && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 text-emerald-400">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                    <span className="text-sm font-medium">Çalışıyor</span>
+                  </div>
+                  <span className="text-slate-400 text-sm">
+                    | Gönderilen Event: <span className="text-turkcell-yellow font-mono">{eventCount}</span>
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="text-slate-400 text-sm">Simülasyon konfigürasyonu yükleniyor...</div>
+        )}
       </div>
 
       {/* Live Stats */}

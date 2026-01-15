@@ -185,14 +185,14 @@ public class DbSeeder
         var baseTime = DateTime.UtcNow.AddHours(-4);
         var decisions = new List<Decision>
         {
-            new Decision { DecisionId = "D-001", UserId = "U1", TriggeredRules = "[\"R-01\"]", SelectedAction = "DATA_USAGE_WARNING", SuppressedActions = "[]", Timestamp = baseTime },
-            new Decision { DecisionId = "D-002", UserId = "U2", TriggeredRules = "[\"R-02\"]", SelectedAction = "SPEND_ALERT", SuppressedActions = "[]", Timestamp = baseTime.AddMinutes(15) },
-            new Decision { DecisionId = "D-003", UserId = "U3", TriggeredRules = "[\"R-03\"]", SelectedAction = "CONTENT_SUGGESTION", SuppressedActions = "[]", Timestamp = baseTime.AddMinutes(30) },
-            new Decision { DecisionId = "D-004", UserId = "U5", TriggeredRules = "[\"R-01\",\"R-02\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\"]", Timestamp = baseTime.AddMinutes(45) },
-            new Decision { DecisionId = "D-005", UserId = "U8", TriggeredRules = "[\"R-01\",\"R-02\",\"R-03\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\",\"CONTENT_SUGGESTION\"]", Timestamp = baseTime.AddHours(1) },
-            new Decision { DecisionId = "D-006", UserId = "U9", TriggeredRules = "[\"R-01\",\"R-02\",\"R-03\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\",\"CONTENT_SUGGESTION\"]", Timestamp = baseTime.AddHours(1.5) },
-            new Decision { DecisionId = "D-007", UserId = "U7", TriggeredRules = "[\"R-01\"]", SelectedAction = "DATA_USAGE_WARNING", SuppressedActions = "[]", Timestamp = baseTime.AddHours(2) },
-            new Decision { DecisionId = "D-008", UserId = "U10", TriggeredRules = "[\"R-05\",\"R-06\"]", SelectedAction = "DATA_USAGE_NUDGE", SuppressedActions = "[\"SPEND_NUDGE\"]", Timestamp = baseTime.AddHours(2.5) },
+            new Decision { DecisionId = "D-001", UserId = "U1", TriggeredRules = "[\"R-01\"]", SelectedAction = "DATA_USAGE_WARNING", SuppressedActions = "[]", Message = "Günlük internet kullanımınız yüksek seviyeye ulaştı. Kotanızı kontrol etmenizi öneririz.", Timestamp = baseTime },
+            new Decision { DecisionId = "D-002", UserId = "U2", TriggeredRules = "[\"R-02\"]", SelectedAction = "SPEND_ALERT", SuppressedActions = "[]", Message = "Günlük harcama limitinize yaklaşıyorsunuz. Harcamalarınızı gözden geçirin.", Timestamp = baseTime.AddMinutes(15) },
+            new Decision { DecisionId = "D-003", UserId = "U3", TriggeredRules = "[\"R-03\"]", SelectedAction = "CONTENT_SUGGESTION", SuppressedActions = "[]", Message = "Bugün çok fazla içerik tükettiniz. Bir mola vermeyi düşünebilirsiniz.", Timestamp = baseTime.AddMinutes(30) },
+            new Decision { DecisionId = "D-004", UserId = "U5", TriggeredRules = "[\"R-01\",\"R-02\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\"]", Message = "⚠️ Dikkat! İnternet kotası ve harcama limitinizi aştınız. Acil müdahale gerekebilir.", Timestamp = baseTime.AddMinutes(45) },
+            new Decision { DecisionId = "D-005", UserId = "U8", TriggeredRules = "[\"R-01\",\"R-02\",\"R-03\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\",\"CONTENT_SUGGESTION\"]", Message = "⚠️ Dikkat! İnternet kotası ve harcama limitinizi aştınız. Acil müdahale gerekebilir.", Timestamp = baseTime.AddHours(1) },
+            new Decision { DecisionId = "D-006", UserId = "U9", TriggeredRules = "[\"R-01\",\"R-02\",\"R-03\",\"R-04\"]", SelectedAction = "CRITICAL_ALERT", SuppressedActions = "[\"DATA_USAGE_WARNING\",\"SPEND_ALERT\",\"CONTENT_SUGGESTION\"]", Message = "⚠️ Dikkat! İnternet kotası ve harcama limitinizi aştınız. Acil müdahale gerekebilir.", Timestamp = baseTime.AddHours(1.5) },
+            new Decision { DecisionId = "D-007", UserId = "U7", TriggeredRules = "[\"R-01\"]", SelectedAction = "DATA_USAGE_WARNING", SuppressedActions = "[]", Message = "Günlük internet kullanımınız yüksek seviyeye ulaştı. Kotanızı kontrol etmenizi öneririz.", Timestamp = baseTime.AddHours(2) },
+            new Decision { DecisionId = "D-008", UserId = "U10", TriggeredRules = "[\"R-05\",\"R-06\"]", SelectedAction = "DATA_USAGE_NUDGE", SuppressedActions = "[\"SPEND_NUDGE\"]", Message = "İnternet kullanımınız artıyor. Kota durumunuzu takip edin.", Timestamp = baseTime.AddHours(2.5) },
         };
 
         await _context.Decisions.AddRangeAsync(decisions);

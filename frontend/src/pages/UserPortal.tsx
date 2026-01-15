@@ -14,7 +14,7 @@ export function UserPortal() {
   const [events, setEvents] = useState<Event[]>([]);
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState<{ action: string; show: boolean }>({ action: '', show: false });
+  const [notification, setNotification] = useState<{ action: string; message: string; show: boolean }>({ action: '', message: '', show: false });
 
   const loadData = useCallback(async () => {
     if (!user?.userId) return;
@@ -49,8 +49,8 @@ export function UserPortal() {
     },
     onDecisionMade: (decision: Decision) => {
       setDecisions((prev) => [decision, ...prev.slice(0, 9)]);
-      // Show notification toast
-      setNotification({ action: decision.selectedAction, show: true });
+      // Show notification toast with the rule's message
+      setNotification({ action: decision.selectedAction, message: decision.message || '', show: true });
     },
     onEventCreated: (event: Event) => {
       setEvents((prev) => [event, ...prev.slice(0, 9)]);
@@ -97,6 +97,7 @@ export function UserPortal() {
       {/* Notification Toast */}
       <NotificationToast
         action={notification.action}
+        message={notification.message}
         show={notification.show}
         onClose={() => setNotification({ ...notification, show: false })}
       />

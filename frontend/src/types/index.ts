@@ -122,3 +122,22 @@ export interface UpdateUserDto {
   password?: string;
   role?: string;
 }
+
+// Simulation types
+export interface SimulationServiceConfig {
+  name: string;
+  eventType: string;
+  unit: string;
+  normalMin: number;
+  normalMax: number;
+  aggressiveMin: number;
+  aggressiveMax: number;
+}
+
+export interface SimulationConfig {
+  services: SimulationServiceConfig[];
+  aggressiveProbability: number;
+  defaultIntervalSeconds: number;
+  minIntervalSeconds: number;
+  maxIntervalSeconds: number;
+}

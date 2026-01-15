@@ -3,6 +3,7 @@ import { Bell, X, AlertTriangle, Wifi, CreditCard, Tv, Zap } from 'lucide-react'
 
 interface NotificationToastProps {
   action: string;
+  message?: string; // Kuraldan gelen özel mesaj
   show: boolean;
   onClose: () => void;
   duration?: number;
@@ -77,7 +78,7 @@ const getActionConfig = (action: string) => {
   }
 };
 
-export function NotificationToast({ action, show, onClose, duration = 5000 }: NotificationToastProps) {
+export function NotificationToast({ action, message, show, onClose, duration = 5000 }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -102,6 +103,8 @@ export function NotificationToast({ action, show, onClose, duration = 5000 }: No
 
   const config = getActionConfig(action);
   const Icon = config.icon;
+  // Kuraldan gelen mesaj varsa onu kullan, yoksa varsayılan mesajı göster
+  const displayMessage = message && message.trim() !== '' ? message : config.message;
 
   return (
     <div
@@ -130,7 +133,7 @@ export function NotificationToast({ action, show, onClose, duration = 5000 }: No
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-sm text-slate-300 mt-1">{config.message}</p>
+            <p className="text-sm text-slate-300 mt-1">{displayMessage}</p>
             <div className="flex items-center gap-2 mt-2">
               <Zap className="w-3 h-3 text-turkcell-yellow" />
               <span className="text-xs text-slate-400">Az önce</span>
