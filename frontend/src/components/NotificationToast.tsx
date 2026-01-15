@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bell, X, AlertTriangle, Wifi, CreditCard, Tv, Zap } from 'lucide-react';
+import { useConfig } from '../contexts/ConfigContext';
 
 interface NotificationToastProps {
   action: string;
@@ -9,78 +10,63 @@ interface NotificationToastProps {
   duration?: number;
 }
 
-const getActionConfig = (action: string) => {
-  switch (action) {
-    case 'DATA_USAGE_WARNING':
-      return {
-        icon: Wifi,
-        color: 'bg-blue-500/20 border-blue-500/50 text-blue-400',
-        iconColor: 'text-blue-400',
-        title: 'İnternet Kullanım Uyarısı',
-        message: 'Günlük internet kullanımınız yüksek seviyeye ulaştı.',
-      };
-    case 'DATA_USAGE_NUDGE':
-      return {
-        icon: Wifi,
-        color: 'bg-blue-500/10 border-blue-500/30 text-blue-300',
-        iconColor: 'text-blue-300',
-        title: 'İnternet Kullanım Bildirimi',
-        message: 'İnternet kullanımınız artıyor. Kotanızı takip etmeyi unutmayın.',
-      };
-    case 'SPEND_ALERT':
-      return {
-        icon: CreditCard,
-        color: 'bg-green-500/20 border-green-500/50 text-green-400',
-        iconColor: 'text-green-400',
-        title: 'Harcama Uyarısı',
-        message: 'Bugünkü harcamalarınız belirlenen limiti aştı.',
-      };
-    case 'SPEND_NUDGE':
-      return {
-        icon: CreditCard,
-        color: 'bg-green-500/10 border-green-500/30 text-green-300',
-        iconColor: 'text-green-300',
-        title: 'Harcama Bildirimi',
-        message: 'Harcamalarınız orta seviyede. Bütçenizi gözden geçirin.',
-      };
-    case 'CONTENT_SUGGESTION':
-      return {
-        icon: Tv,
-        color: 'bg-purple-500/20 border-purple-500/50 text-purple-400',
-        iconColor: 'text-purple-400',
-        title: 'İçerik Önerisi',
-        message: 'Yoğun içerik tüketimi yaptınız. Ara vermenizi öneririz.',
-      };
-    case 'CONTENT_COOLDOWN_SUGGESTION':
-      return {
-        icon: Tv,
-        color: 'bg-purple-500/10 border-purple-500/30 text-purple-300',
-        iconColor: 'text-purple-300',
-        title: 'Mola Önerisi',
-        message: 'Uzun süredir içerik tüketiyorsunuz. Kısa bir mola verin.',
-      };
-    case 'CRITICAL_ALERT':
-      return {
-        icon: AlertTriangle,
-        color: 'bg-red-500/20 border-red-500/50 text-red-400',
-        iconColor: 'text-red-400',
-        title: 'Kritik Uyarı!',
-        message: 'Kullanımınız kritik seviyede. Limitlerinizi kontrol edin.',
-      };
-    default:
-      return {
-        icon: Bell,
-        color: 'bg-turkcell-yellow/20 border-turkcell-yellow/50 text-turkcell-yellow',
-        iconColor: 'text-turkcell-yellow',
-        title: 'Bildirim',
-        message: 'Turkcell size önemli bir bildirim gönderiyor.',
-      };
-  }
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  DATA_USAGE_WARNING: Wifi,
+  DATA_USAGE_NUDGE: Wifi,
+  SPEND_ALERT: CreditCard,
+  SPEND_NUDGE: CreditCard,
+  CONTENT_SUGGESTION: Tv,
+  CONTENT_COOLDOWN_SUGGESTION: Tv,
+  CRITICAL_ALERT: AlertTriangle,
+};
+
+const colorClasses: Record<string, { container: string; icon: string }> = {
+  blue: { 
+    container: 'bg-blue-500/20 border-blue-500/50 text-blue-400', 
+    icon: 'text-blue-400' 
+  },
+  cyan: { 
+    container: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400', 
+    icon: 'text-cyan-400' 
+  },
+  orange: { 
+    container: 'bg-orange-500/20 border-orange-500/50 text-orange-400', 
+    icon: 'text-orange-400' 
+  },
+  amber: { 
+    container: 'bg-amber-500/20 border-amber-500/50 text-amber-400', 
+    icon: 'text-amber-400' 
+  },
+  green: { 
+    container: 'bg-green-500/20 border-green-500/50 text-green-400', 
+    icon: 'text-green-400' 
+  },
+  purple: { 
+    container: 'bg-purple-500/20 border-purple-500/50 text-purple-400', 
+    icon: 'text-purple-400' 
+  },
+  pink: { 
+    container: 'bg-pink-500/20 border-pink-500/50 text-pink-400', 
+    icon: 'text-pink-400' 
+  },
+  red: { 
+    container: 'bg-red-500/20 border-red-500/50 text-red-400', 
+    icon: 'text-red-400' 
+  },
+  yellow: { 
+    container: 'bg-turkcell-yellow/20 border-turkcell-yellow/50 text-turkcell-yellow', 
+    icon: 'text-turkcell-yellow' 
+  },
+  slate: { 
+    container: 'bg-slate-500/20 border-slate-500/50 text-slate-400', 
+    icon: 'text-slate-400' 
+  },
 };
 
 export function NotificationToast({ action, message, show, onClose, duration = 5000 }: NotificationToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
+  const { getActionLabel, uiConfig } = useConfig();
 
   useEffect(() => {
     if (show) {
@@ -101,10 +87,14 @@ export function NotificationToast({ action, message, show, onClose, duration = 5
 
   if (!isVisible || !action) return null;
 
-  const config = getActionConfig(action);
-  const Icon = config.icon;
-  // Kuraldan gelen mesaj varsa onu kullan, yoksa varsayılan mesajı göster
-  const displayMessage = message && message.trim() !== '' ? message : config.message;
+  const config = getActionLabel(action);
+  const Icon = iconMap[action] || Bell;
+  const colors = colorClasses[config.color] || colorClasses.yellow;
+  
+  // Kuraldan gelen mesaj varsa onu kullan, yoksa config'den al
+  const displayMessage = message && message.trim() !== '' 
+    ? message 
+    : config.defaultMessage || uiConfig?.fallbackMessage || 'Hesabınızla ilgili bir güncelleme var.';
 
   return (
     <div
@@ -112,9 +102,9 @@ export function NotificationToast({ action, message, show, onClose, duration = 5
         isLeaving ? 'translate-x-full opacity-0' : 'translate-x-0 opacity-100'
       }`}
     >
-      <div className={`p-4 rounded-xl border backdrop-blur-xl shadow-2xl ${config.color}`}>
+      <div className={`p-4 rounded-xl border backdrop-blur-xl shadow-2xl ${colors.container}`}>
         <div className="flex items-start gap-3">
-          <div className={`p-2 rounded-lg bg-white/10 ${config.iconColor}`}>
+          <div className={`p-2 rounded-lg bg-white/10 ${colors.icon}`}>
             <Icon className="w-6 h-6" />
           </div>
           <div className="flex-1">

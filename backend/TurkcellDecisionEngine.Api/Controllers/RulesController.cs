@@ -12,10 +12,14 @@ namespace TurkcellDecisionEngine.Api.Controllers;
 public class RulesController : ControllerBase
 {
     private readonly IRuleEngine _ruleEngine;
+    private readonly ILlmService _llmService;
+    private readonly ILogger<RulesController> _logger;
 
-    public RulesController(IRuleEngine ruleEngine)
+    public RulesController(IRuleEngine ruleEngine, ILlmService llmService, ILogger<RulesController> logger)
     {
         _ruleEngine = ruleEngine;
+        _llmService = llmService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -158,5 +162,37 @@ public class RulesController : ControllerBase
             Priority = updated.Priority,
             IsActive = updated.IsActive
         });
+    }
+
+    /// <summary>
+    /// Doğal dil açıklamasından AI ile kural oluşturur
+    /// </summary>
+    [HttpPost("generate")]
+    public async Task<ActionResult<GenerateRuleResponse>> GenerateRule([FromBody] GenerateRuleRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Generating rule from prompt: {Prompt}", request.Prompt);
+            
+            var generatedRule = await _llmService.GenerateRuleFromNaturalLanguageAsync(request.Prompt);
+
+            return Ok(new GenerateRuleResponse
+            {
+                Condition = generatedRule.Condition,
+                Action = generatedRule.Action,
+                Message = generatedRule.Message,
+                Explanation = generatedRule.Explanation
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Invalid operation while generating rule");
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating rule from natural language");
+            return StatusCode(500, new { error = "Kural oluşturulurken bir hata oluştu. Lütfen tekrar deneyin." });
+        }
     }
 }

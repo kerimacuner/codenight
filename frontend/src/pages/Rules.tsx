@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, X, Save, RefreshCw } from 'lucide-react';
+import { BookOpen, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, X, Save, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
 import { rulesApi } from '../services/api';
 import type { Rule, CreateRuleDto } from '../types';
 import { ActionBadge } from '../components/ActionBadge';
@@ -30,6 +30,12 @@ export function Rules() {
   const [editingRule, setEditingRule] = useState<Rule | null>(null);
   const [formData, setFormData] = useState<RuleFormData>(initialFormData);
   const [saving, setSaving] = useState(false);
+  
+  // AI Generation state
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
 
   useEffect(() => {
     loadRules();
@@ -70,6 +76,41 @@ export function Rules() {
     setShowModal(false);
     setEditingRule(null);
     setFormData(initialFormData);
+    setAiPrompt('');
+    setAiError(null);
+    setAiExplanation(null);
+  };
+
+  const handleAiGenerate = async () => {
+    if (!aiPrompt.trim() || aiPrompt.length < 10) {
+      setAiError('Lütfen en az 10 karakterlik bir açıklama girin.');
+      return;
+    }
+
+    setAiGenerating(true);
+    setAiError(null);
+    setAiExplanation(null);
+
+    try {
+      const generated = await rulesApi.generate(aiPrompt);
+      
+      setFormData({
+        ...formData,
+        condition: generated.condition,
+        action: generated.action,
+        message: generated.message,
+      });
+      
+      if (generated.explanation) {
+        setAiExplanation(generated.explanation);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to generate rule:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Kural oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.';
+      setAiError(errorMessage);
+    } finally {
+      setAiGenerating(false);
+    }
   };
 
   const handleSave = async () => {
@@ -253,7 +294,7 @@ export function Rules() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-md mx-4">
+          <div className="bg-slate-800 rounded-xl border border-slate-700 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-slate-700">
               <h3 className="text-lg font-semibold text-white">
                 {editingRule ? 'Kuralı Düzenle' : 'Yeni Kural'}
@@ -264,6 +305,57 @@ export function Rules() {
             </div>
 
             <div className="p-4 space-y-4">
+              {/* AI Generation Section */}
+              {!editingRule && (
+                <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="w-5 h-5 text-purple-400" />
+                    <h4 className="text-sm font-medium text-white">AI ile Kural Oluştur</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <textarea
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="Örnek: Kullanıcı günde 15 GB üstü internet kullanırsa uyarı gönder"
+                      rows={2}
+                      className="input w-full resize-none text-sm"
+                      disabled={aiGenerating}
+                    />
+                    <div className="flex items-center justify-between">
+                      <button
+                        onClick={handleAiGenerate}
+                        disabled={aiGenerating || aiPrompt.length < 10}
+                        className="btn-primary flex items-center gap-2 text-sm py-2 px-3 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50"
+                      >
+                        {aiGenerating ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Oluşturuluyor...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            AI ile Oluştur
+                          </>
+                        )}
+                      </button>
+                      <span className="text-xs text-slate-500">{aiPrompt.length}/500</span>
+                    </div>
+                    {aiError && (
+                      <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 p-2 rounded">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>{aiError}</span>
+                      </div>
+                    )}
+                    {aiExplanation && (
+                      <div className="text-emerald-400 text-sm bg-emerald-500/10 p-2 rounded">
+                        <span className="font-medium">AI Açıklaması:</span> {aiExplanation}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {!editingRule && (
                 <div>
                   <label className="block text-sm text-slate-400 mb-1">Kural ID (opsiyonel)</label>

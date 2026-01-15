@@ -16,63 +16,11 @@ import {
   Square,
   Gauge
 } from 'lucide-react';
-import { eventsApi, usersApi, dashboardApi, simulationApi } from '../services/api';
-import type { DashboardSummary, CreateEventDto, UserState, Event, Decision, SimulationConfig } from '../types';
+import { eventsApi, usersApi, dashboardApi, simulationApi, configApi } from '../services/api';
+import type { DashboardSummary, UserState, Event, Decision, SimulationConfig, Scenario } from '../types';
 import { RiskBadge } from '../components/RiskBadge';
 import { ActionBadge } from '../components/ActionBadge';
 import { useRealtimeUpdates } from '../hooks/useSignalR';
-
-interface Scenario {
-  id: string;
-  name: string;
-  description: string;
-  events: Omit<CreateEventDto, 'eventId' | 'timestamp'>[];
-  color: string;
-}
-
-const SCENARIOS: Scenario[] = [
-  {
-    id: 'high-usage',
-    name: 'Yüksek İnternet',
-    description: 'Kullanıcının internet kotasını hızla tüketir',
-    events: [
-      { userId: 'U1', service: 'Superonline', eventType: 'DATA_USAGE', value: 5, unit: 'GB' },
-      { userId: 'U1', service: 'Superonline', eventType: 'DATA_USAGE', value: 8, unit: 'GB' },
-    ],
-    color: 'blue',
-  },
-  {
-    id: 'spending-spree',
-    name: 'Yüksek Harcama',
-    description: 'Kullanıcının harcama limitini aşar',
-    events: [
-      { userId: 'U2', service: 'Paycell', eventType: 'PAYMENT', value: 150, unit: 'TRY' },
-      { userId: 'U2', service: 'Paycell', eventType: 'PAYMENT', value: 200, unit: 'TRY' },
-    ],
-    color: 'green',
-  },
-  {
-    id: 'content-binge',
-    name: 'İçerik Maratonu',
-    description: 'Kullanıcının yoğun içerik tüketimi',
-    events: [
-      { userId: 'U3', service: 'TV+', eventType: 'STREAMING', value: 120, unit: 'MIN' },
-      { userId: 'U3', service: 'Fizy', eventType: 'STREAMING', value: 90, unit: 'MIN' },
-    ],
-    color: 'purple',
-  },
-  {
-    id: 'critical-user',
-    name: 'Kritik Kullanıcı',
-    description: 'Tüm limitleri aşan kritik senaryo',
-    events: [
-      { userId: 'U4', service: 'Superonline', eventType: 'DATA_USAGE', value: 18, unit: 'GB' },
-      { userId: 'U4', service: 'Paycell', eventType: 'PAYMENT', value: 350, unit: 'TRY' },
-      { userId: 'U4', service: 'TV+', eventType: 'STREAMING', value: 180, unit: 'MIN' },
-    ],
-    color: 'red',
-  },
-];
 
 export function PresenterMode() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -81,6 +29,9 @@ export function PresenterMode() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [runningScenario, setRunningScenario] = useState<string | null>(null);
   const [lastAction, setLastAction] = useState<string>('');
+  
+  // Scenarios from API
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
   
   // Simulation states
   const [simulationConfig, setSimulationConfig] = useState<SimulationConfig | null>(null);
@@ -116,10 +67,21 @@ export function PresenterMode() {
     }
   }, []);
 
+  // Load scenarios from API
+  const loadScenarios = useCallback(async () => {
+    try {
+      const response = await configApi.getScenarios();
+      setScenarios(response.scenarios);
+    } catch (err) {
+      console.error('Failed to load scenarios:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
     loadSimulationConfig();
-  }, [loadData, loadSimulationConfig]);
+    loadScenarios();
+  }, [loadData, loadSimulationConfig, loadScenarios]);
 
   // Generate random event based on config
   const generateRandomEvent = useCallback(async () => {
@@ -361,7 +323,7 @@ export function PresenterMode() {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {SCENARIOS.map((scenario) => (
+          {scenarios.map((scenario) => (
             <button
               key={scenario.id}
               onClick={() => runScenario(scenario)}

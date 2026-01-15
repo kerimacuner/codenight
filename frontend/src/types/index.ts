@@ -141,3 +141,57 @@ export interface SimulationConfig {
   minIntervalSeconds: number;
   maxIntervalSeconds: number;
 }
+
+// UI Config types
+export interface ActionLabelConfig {
+  label: string;
+  color: string;
+  title: string;
+  defaultMessage: string;
+}
+
+export interface RiskLabelConfig {
+  label: string;
+  color: string;
+}
+
+export interface UiConfig {
+  actionLabels: Record<string, ActionLabelConfig>;
+  riskLabels: Record<string, RiskLabelConfig>;
+  fallbackMessage: string;
+  defaultNotificationTitle: string;
+  defaultNotificationMessage: string;
+}
+
+// Scenario types
+export interface ScenarioEvent {
+  userId: string;
+  service: string;
+  eventType: string;
+  value: number;
+  unit: string;
+}
+
+export interface Scenario {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  events: ScenarioEvent[];
+}
+
+export interface ScenariosResponse {
+  scenarios: Scenario[];
+}
+
+// LLM Rule Generation types
+export interface GenerateRuleRequest {
+  prompt: string;
+}
+
+export interface GeneratedRule {
+  condition: string;
+  action: string;
+  message: string;
+  explanation?: string;
+}

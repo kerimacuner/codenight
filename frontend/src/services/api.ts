@@ -14,7 +14,10 @@ import type {
   User,
   CreateUserDto,
   UpdateUserDto,
-  SimulationConfig
+  SimulationConfig,
+  UiConfig,
+  ScenariosResponse,
+  GeneratedRule
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
@@ -154,6 +157,11 @@ export const rulesApi = {
     const response = await api.patch<Rule>(`/rules/${ruleId}/toggle`);
     return response.data;
   },
+
+  generate: async (prompt: string): Promise<GeneratedRule> => {
+    const response = await api.post<GeneratedRule>('/rules/generate', { prompt });
+    return response.data;
+  },
 };
 
 // Decisions API
@@ -186,6 +194,19 @@ export const dashboardApi = {
 export const simulationApi = {
   getConfig: async (): Promise<SimulationConfig> => {
     const response = await api.get<SimulationConfig>('/simulation/config');
+    return response.data;
+  },
+};
+
+// Config API
+export const configApi = {
+  getUiConfig: async (): Promise<UiConfig> => {
+    const response = await api.get<UiConfig>('/config/ui');
+    return response.data;
+  },
+  
+  getScenarios: async (): Promise<ScenariosResponse> => {
+    const response = await api.get<ScenariosResponse>('/config/scenarios');
     return response.data;
   },
 };

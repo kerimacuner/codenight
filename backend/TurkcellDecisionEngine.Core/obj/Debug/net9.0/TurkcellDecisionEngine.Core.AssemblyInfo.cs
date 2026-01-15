@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TurkcellDecisionEngine.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+07b0b798a6011683d8196b0ff860bd0dea9032e5")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c9f72d73f86632617211244d122422d4e40268f0")]
 [assembly: System.Reflection.AssemblyProductAttribute("TurkcellDecisionEngine.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TurkcellDecisionEngine.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

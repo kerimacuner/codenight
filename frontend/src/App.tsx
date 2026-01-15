@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { SignalRProvider } from './contexts/SignalRContext';
+import { ConfigProvider } from './contexts/ConfigContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
@@ -15,9 +16,10 @@ import { PresenterMode } from './pages/PresenterMode';
 
 function App() {
   return (
-    <AuthProvider>
-      <SignalRProvider>
-        <Router>
+    <ConfigProvider>
+      <AuthProvider>
+        <SignalRProvider>
+          <Router>
           <Routes>
             {/* Public Route */}
             <Route path="/login" element={<Login />} />
@@ -113,9 +115,10 @@ function App() {
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
-        </Router>
-      </SignalRProvider>
-    </AuthProvider>
+          </Router>
+        </SignalRProvider>
+      </AuthProvider>
+    </ConfigProvider>
   );
 }
 

@@ -83,6 +83,9 @@ builder.Services.AddScoped<IRuleEngine, RuleEngine>();
 builder.Services.AddScoped<IActionManager, ActionManager>();
 builder.Services.AddScoped<IEventProcessor, EventProcessor>();
 
+// Register LLM service for AI-powered rule generation
+builder.Services.AddScoped<ILlmService, OpenAiLlmService>();
+
 // Configure CORS for React frontend and SignalR (Local Network Support)
 builder.Services.AddCors(options =>
 {

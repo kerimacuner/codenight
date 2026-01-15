@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using TurkcellDecisionEngine.Core.Entities;
 using TurkcellDecisionEngine.Core.Interfaces;
@@ -11,15 +12,18 @@ public class ActionManager : IActionManager
     private readonly AppDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly IRealtimeNotifier _realtimeNotifier;
+    private readonly IConfiguration _configuration;
 
     public ActionManager(
         AppDbContext context, 
         INotificationService notificationService,
-        IRealtimeNotifier realtimeNotifier)
+        IRealtimeNotifier realtimeNotifier,
+        IConfiguration configuration)
     {
         _context = context;
         _notificationService = notificationService;
         _realtimeNotifier = realtimeNotifier;
+        _configuration = configuration;
     }
 
     public Task<(string SelectedAction, List<string> SuppressedActions)> SelectActionAsync(IEnumerable<Rule> triggeredRules)
@@ -109,16 +113,18 @@ public class ActionManager : IActionManager
 
     private string GetNotificationMessage(string actionType)
     {
-        return actionType switch
+        // Konfigürasyondan mesajı almaya çalış
+        var configMessage = _configuration[$"UiConfig:ActionLabels:{actionType}:DefaultMessage"];
+        if (!string.IsNullOrEmpty(configMessage))
         {
-            "DATA_USAGE_WARNING" => "Günlük internet kullanımınız yüksek seviyeye ulaştı. Kalan kotanızı kontrol etmenizi öneririz.",
-            "SPEND_ALERT" => "Bugünkü harcamalarınız belirlenen limiti aştı. Harcamalarınızı gözden geçirmenizi öneririz.",
-            "CONTENT_SUGGESTION" => "Bugün yoğun içerik tüketimi yaptınız. Göz sağlığınız için ara vermenizi öneririz.",
-            "CRITICAL_ALERT" => "Dikkat! Bugün internet ve harcama kullanımınız kritik seviyededir. Limitlerinizi kontrol etmenizi öneririz.",
-            "DATA_USAGE_NUDGE" => "İnternet kullanımınız artıyor. Kotanızı takip etmeyi unutmayın.",
-            "SPEND_NUDGE" => "Harcamalarınız orta seviyede. Bütçenizi gözden geçirmek isteyebilirsiniz.",
-            "CONTENT_COOLDOWN_SUGGESTION" => "Uzun süredir içerik tüketiyorsunuz. Kısa bir mola vermenizi öneririz.",
-            _ => "Turkcell size önemli bir bildirim göndermek istiyor."
-        };
+            return configMessage;
+        }
+
+        // Fallback mesajı konfigürasyondan al
+        var fallbackMessage = _configuration["UiConfig:FallbackMessage"] 
+            ?? _configuration["UiConfig:DefaultNotificationMessage"] 
+            ?? "Turkcell size önemli bir bildirim göndermek istiyor.";
+        
+        return fallbackMessage;
     }
 }

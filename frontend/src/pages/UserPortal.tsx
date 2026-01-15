@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Wifi, CreditCard, Tv, AlertTriangle, Bell, Activity, WifiIcon, WifiOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfig } from '../contexts/ConfigContext';
 import { usersApi, eventsApi, decisionsApi } from '../services/api';
 import type { UserState, Event, Decision } from '../types';
 import { RiskBadge } from '../components/RiskBadge';
@@ -10,6 +11,7 @@ import { NotificationToast } from '../components/NotificationToast';
 
 export function UserPortal() {
   const { user } = useAuth();
+  const { getFallbackMessage } = useConfig();
   const [userState, setUserState] = useState<UserState | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [decisions, setDecisions] = useState<Decision[]>([]);
@@ -75,13 +77,13 @@ export function UserPortal() {
     }
   };
 
-  // Decision'dan gelen mesajı kullan, yoksa varsayılan mesaj göster
+  // Decision'dan gelen mesajı kullan, yoksa config'den fallback mesaj göster
   const getDecisionMessage = (decision: Decision): string => {
     if (decision.message && decision.message.trim() !== '') {
       return decision.message;
     }
-    // Fallback: Kural yönetiminde mesaj tanımlanmamışsa varsayılan mesaj
-    return 'Hesabınızla ilgili bir güncelleme var.';
+    // Fallback: Kural yönetiminde mesaj tanımlanmamışsa config'den varsayılan mesaj
+    return getFallbackMessage();
   };
 
   if (loading) {
